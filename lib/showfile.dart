@@ -23,7 +23,13 @@ class ShowFile
   ShowFile.fromXmlElement(xml.XmlElement element)
     : assert(element.name.toString() == ShowFile.elementName)
     , name = element.getAttribute("title")!
-  ;
+  {
+    for(final childElement in element.childElements) {
+      if (childElement.name.toString() == ShowFile._bgPlaylistsElementName) {
+        _loadBackgroundPlaylists(childElement);
+      }
+    }
+  }
 
   ShowFile.fromXmlDocument(xml.XmlDocument document)
     : this.fromXmlElement(document.firstElementChild!)
@@ -43,4 +49,18 @@ class ShowFile
 
   // Public members
   String name;
+
+  PlaylistList backgroundPlaylists = <Playlist>[];
+
+  // Playlist Loading
+
+  void _loadBackgroundPlaylists(xml.XmlElement bgElement)
+  {
+    assert(bgElement.name.toString() == ShowFile._bgPlaylistsElementName);
+    for(final childElement in bgElement.childElements) {
+      if (childElement.name.toString() == Playlist.elementName) {
+        backgroundPlaylists.add(Playlist.fromXmlElement(childElement));
+      }
+    }
+  }
 }

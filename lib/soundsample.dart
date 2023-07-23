@@ -13,13 +13,13 @@ class SoundSample
   ;
 
   SoundSample.fromXmlElement(xml.XmlElement element)
-    : name = element.getAttribute("title")!
+    : assert(element.name.toString() == SoundSample.elementName)
+    , name = element.getAttribute("title")!
     , _resourceUrl = element.getAttribute("resource_url")
     , startTimestamp = double.tryParse(element.getAttribute("start_timestamp") ?? "0.0") ?? 0.0
     , endTimestamp = double.tryParse(element.getAttribute("end_timestamp") ?? "0.0") ?? 0.0
     , volumeFactor = double.tryParse(element.getAttribute("volume_factor") ?? "0.0") ?? 0.0
   {
-    assert(element.name.toString() == SoundSample.elementName);
     if (_resourceUrl != null) {
       //TODO: get time data from the resource_url
     }

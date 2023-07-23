@@ -17,10 +17,10 @@ class Playlist
   ;
 
   Playlist.fromXmlElement(xml.XmlElement element)
-    : name = element.getAttribute("title")!
+    : assert(element.name.toString() == Playlist.elementName)
+    , name = element.getAttribute("title")!
     , sampleList = <SoundSample>[]
   {
-    assert(element.name.toString() == Playlist.elementName);
     for(final childElement in element.childElements) {
       if (childElement.name.toString() == SoundSample.elementName) {
         sampleList.add(SoundSample.fromXmlElement(childElement));
