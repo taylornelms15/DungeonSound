@@ -19,6 +19,7 @@ class Playlist
   Playlist.fromXmlElement(xml.XmlElement element)
     : assert(element.name.toString() == Playlist.elementName)
     , name = element.getAttribute("title")!
+    , volumeFactor = double.tryParse(element.getAttribute("volume_factor") ?? "0.0") ?? 0.0
     , sampleList = <SoundSample>[]
   {
     for(final childElement in element.childElements) {

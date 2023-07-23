@@ -36,12 +36,8 @@ class ShowFile
   ;
 
   ShowFile.fromFilepath(String path)
-    : name = ""
-  {
-    String fileContents = File(path).readAsStringSync();
-    xml.XmlDocument doc = xml.XmlDocument.parse(fileContents);
-    ShowFile.fromXmlDocument(doc);
-  }
+    : this.fromXmlDocument(xml.XmlDocument.parse(File(path).readAsStringSync()))
+  ;
 
   // Static members
   static const String elementName = "ShowFile";

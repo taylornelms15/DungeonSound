@@ -1,4 +1,5 @@
 import 'package:xml/xml.dart' as xml;
+import 'dart:io';
 
 /// @brief Class for storing records of playable audio
 ///
@@ -21,6 +22,7 @@ class SoundSample
     , volumeFactor = double.tryParse(element.getAttribute("volume_factor") ?? "0.0") ?? 0.0
   {
     if (_resourceUrl != null) {
+      resourceUri = Uri.file(_resourceUrl!, windows: Platform.isWindows);
       //TODO: get time data from the resource_url
     }
   }
@@ -33,6 +35,7 @@ class SoundSample
   double startTimestamp = 0.0;
   double endTimestamp = 0.0;
   double volumeFactor = 1.0;
+  Uri? resourceUri;
 
   // Private members
   String? _resourceUrl;
