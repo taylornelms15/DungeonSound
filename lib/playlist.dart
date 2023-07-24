@@ -37,5 +37,40 @@ class Playlist
   double volumeFactor = 1.0;
   SoundSampleList sampleList;
 
-  // Private members
+  // Comparison
+
+  @override bool operator ==(Object other)
+  {
+    if (other is! Playlist) {
+      return false;
+    }
+    Playlist cmp = other as Playlist;
+    if (name != cmp.name) {
+      return false;
+    }
+    if (volumeFactor != cmp.volumeFactor){
+      return false;
+    }
+    if (sampleList.length != cmp.sampleList.length) {
+      return false;
+    }
+    for(int i = 0; i < sampleList.length; ++i){
+      if (sampleList[i] != cmp.sampleList[i]) return false;
+    }
+    return true;
+  }
+
+  // Saving/Loading
+  xml.XmlElement saveToXmlElement()
+  {
+    xml.XmlElement pl = xml.XmlElement(xml.XmlName(Playlist.elementName));
+    pl.setAttribute("title", name);
+    pl.setAttribute("volume_factor", volumeFactor.toString());
+    for(final ss in sampleList) {
+      xml.XmlElement ssElement = ss.saveToXmlElement();
+      pl.children.add(ssElement);
+    }
+
+    return pl;
+  }
 }

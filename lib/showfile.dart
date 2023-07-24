@@ -35,9 +35,15 @@ class ShowFile
     : this.fromXmlElement(document.firstElementChild!)
   ;
 
-  ShowFile.fromFilepath(String path)
-    : this.fromXmlDocument(xml.XmlDocument.parse(File(path).readAsStringSync()))
-  ;
+  /// This is the preferred way to create a showfile by "Loading" a file,
+  /// because it stores the filePath loaded to create it for easy saving later
+  factory ShowFile.fromFilepath(String path)
+  {
+    xml.XmlDocument xmlDoc = xml.XmlDocument.parse(File(path).readAsStringSync());
+    var result = ShowFile.fromXmlDocument(xmlDoc);
+    result.filePath = path;
+    return result;
+  }
 
   // Static members
   static const String elementName = "ShowFile";
@@ -45,10 +51,43 @@ class ShowFile
 
   // Public members
   String name;
+  String? filePath;
 
   PlaylistList backgroundPlaylists = <Playlist>[];
 
-  // Playlist Loading
+  // Saving/Loading Functions
+
+  int saveShowFile([String? path])
+  {
+    if (path != null) {
+      filePath = path;
+    }
+
+    assert(filePath != null);
+    // Construct top-level xml element
+    xml.XmlElement sfElement = xml.XmlElement(xml.XmlName(ShowFile.elementName));
+    sfElement.setAttribute("title", name);
+    xml.XmlElement bgElement = xml.XmlElement(xml.XmlName(ShowFile._bgPlaylistsElementName));
+    sfElement.children.add(bgElement);
+    _saveBackgroundPlaylists(bgElement);
+
+    // Put XmlElement in a document
+    xml.XmlDocument doc = xml.XmlDocument([sfElement]);
+
+    // Save
+    File outfile = File(filePath!);
+    outfile.writeAsStringSync(doc.toXmlString(pretty: true, indent: "  "));
+
+    return 0;
+  }
+
+  void _saveBackgroundPlaylists(xml.XmlElement bgElement)
+  {
+    assert(bgElement.name.toString() == ShowFile._bgPlaylistsElementName);
+    for(final pl in backgroundPlaylists) {
+      bgElement.children.add(pl.saveToXmlElement());
+    }
+  }
 
   void _loadBackgroundPlaylists(xml.XmlElement bgElement)
   {

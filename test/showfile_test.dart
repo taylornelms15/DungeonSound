@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:io';
+//TODO: figure out why path_provider is being a bitch
+import 'package:path_provider_windows/path_provider_windows.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:dungeonsound/showfile.dart';
 import 'package:dungeonsound/playlist.dart';
@@ -51,10 +54,58 @@ void _testKnownGood() async {
   expect(ss1_0.resourceUri, ssuri1_0);
 }
 
+void _testSymmetricalSave() async {
+  // Get the filepath for our temp file
+  final PathProviderWindows provider = PathProviderWindows();
+  String? tempDirStr = await provider.getTemporaryPath();
+  Directory tempDir = Directory(tempDirStr!);
+  String tmpFilePath = p.join(tempDir.path, "testShowfile.showfile");
+
+  // Create a test showfile (mostly a lot of explicit data)
+  ShowFile sf = ShowFile();
+  Playlist pl0 = Playlist();
+  pl0.name = "Battle Music";
+  SoundSample ss0 = SoundSample(name: "Blood", startTimestamp: 0.0, endTimestamp: 45.111, volumeFactor: 0.7);
+  Directory rootdir = Directory("G:\\My Drive\\Dungeons and Dragons\\Castlevania Campaign I Guess\\CastlevaniaMusic\\Battle");
+  ss0.setResourceUrl(p.join(rootdir.path, "1-20 Blood.mp3"));
+  pl0.sampleList.add(ss0);
+  SoundSample ss1 = SoundSample(name: "God's Army", startTimestamp: 3.0, endTimestamp: 55.0, volumeFactor: 0.5);
+  ss1.setResourceUrl(p.join(rootdir.path, "1-06 God's Army.mp3"));
+  pl0.sampleList.add(ss1);
+  Playlist pl1 = Playlist();
+  pl1.name = "Final Battle Music";
+  pl1.volumeFactor = 0.95;
+  SoundSample ss2 = SoundSample(name: "Satan", startTimestamp: 0.0, endTimestamp: 240.0);
+  ss2.setResourceUrl(p.join(rootdir.path, "3-21 Satan.mp3"));
+  pl1.sampleList.add(ss2);
+  sf.backgroundPlaylists.add(pl0);
+  sf.backgroundPlaylists.add(pl1);
+
+  // Save the test showfile
+  sf.saveShowFile(tmpFilePath);
+
+  // Load the test showfile into a new object
+  File tmpFile = File(tmpFilePath);
+  String resultString = tmpFile.readAsStringSync();
+  ShowFile sf2 = ShowFile.fromFilepath(tmpFilePath);
+
+  // Verify two ShowFile objects match
+  expect(sf2.name, sf.name);
+  expect(sf2.filePath, sf.filePath);
+  expect(sf2.backgroundPlaylists.length, sf.backgroundPlaylists.length);
+  for(int i = 0; i < sf.backgroundPlaylists.length; ++i) {
+    expect(sf2.backgroundPlaylists[i], sf.backgroundPlaylists[i]);
+  }
+
+  // Delete temp file
+  tmpFile.delete();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group("ShowFile", () {
     test("ShowFile constructable from known good file", _testKnownGood);
+    test("ShowFile saving and loading are symmetrically sound", _testSymmetricalSave);
   });
 }
