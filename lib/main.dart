@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
+import "ds_logging.dart";
+
 
 void main() {
   runApp(const MyApp());
@@ -70,6 +73,53 @@ class _DSHomePageState extends State<DSHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: <Widget>[
+          IconButton(
+              icon: const Icon(Icons.create),
+              tooltip: "New Showfile",
+              onPressed: () {
+                setState(() {
+                  logInfo("New Button Pressed", LType.buttonPress);
+                }); // setState
+              } //onPressed
+          ),
+          IconButton(
+              icon: const Icon(Icons.save),
+              tooltip: "Save Showfile",
+              onPressed: () {
+                setState(() {
+                  logInfo("Save Button Pressed", LType.buttonPress);
+                }); // setState
+              } //onPressed
+          ),
+          IconButton(
+              icon: const Icon(Icons.save_as),
+              tooltip: "Save Showfile as",
+              onPressed: () {
+                setState(() {
+                  logInfo("Save As Button Pressed", LType.buttonPress);
+                }); // setState
+              } //onPressed
+          ),
+          IconButton(
+              icon: const Icon(Icons.file_open),
+              tooltip: "Open Showfile",
+              onPressed: () {
+                setState(() {
+                  logInfo("Open Button Pressed", LType.buttonPress);
+                }); // setState
+              } //onPressed
+          ),
+          IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: "Showfile Settings",
+              onPressed: () {
+                setState(() {
+                  logInfo("Settings Button Pressed", LType.buttonPress);
+                }); // setState
+              } //onPressed
+          ),
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
