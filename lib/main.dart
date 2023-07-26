@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
+import 'package:package_info_plus/package_info_plus.dart';
 import "ds_logging.dart";
 
 
-void main() {
+void main() async{
   runApp(const MyApp());
 }
 
@@ -44,6 +44,7 @@ class DSHomePage extends StatefulWidget {
 
 class _DSHomePageState extends State<DSHomePage> {
   int _counter = 0;
+  PackageInfo? packageInfo = null;
 
   void _incrementCounter() {
     setState(() {
@@ -56,6 +57,48 @@ class _DSHomePageState extends State<DSHomePage> {
     });
   }
 
+  // Button Press Callbacks
+
+  void _onNewButton() {
+    setState(() {
+      logInfo("New Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onSaveButton() {
+    setState(() {
+      logInfo("Save Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onSaveAsButton() {
+    setState(() {
+      logInfo("Save As Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onOpenButton() {
+    setState(() {
+      logInfo("Open Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onSettingsButton() {
+    setState(() {
+      logInfo("Settings Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onInfoButton() {
+    setState(() {
+      logInfo("Info Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  Future<PackageInfo> _getPackageInfo() {
+    return PackageInfo.fromPlatform();
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -66,9 +109,6 @@ class _DSHomePageState extends State<DSHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -77,47 +117,58 @@ class _DSHomePageState extends State<DSHomePage> {
           IconButton(
               icon: const Icon(Icons.create),
               tooltip: "New Showfile",
-              onPressed: () {
-                setState(() {
-                  logInfo("New Button Pressed", LType.buttonPress);
-                }); // setState
-              } //onPressed
+              onPressed: _onNewButton,
           ),
           IconButton(
               icon: const Icon(Icons.save),
               tooltip: "Save Showfile",
-              onPressed: () {
-                setState(() {
-                  logInfo("Save Button Pressed", LType.buttonPress);
-                }); // setState
-              } //onPressed
+              onPressed: _onSaveButton,
           ),
           IconButton(
               icon: const Icon(Icons.save_as),
               tooltip: "Save Showfile as",
-              onPressed: () {
-                setState(() {
-                  logInfo("Save As Button Pressed", LType.buttonPress);
-                }); // setState
-              } //onPressed
+              onPressed: _onSaveAsButton,
           ),
           IconButton(
               icon: const Icon(Icons.file_open),
               tooltip: "Open Showfile",
-              onPressed: () {
-                setState(() {
-                  logInfo("Open Button Pressed", LType.buttonPress);
-                }); // setState
-              } //onPressed
+              onPressed: _onOpenButton,
           ),
           IconButton(
               icon: const Icon(Icons.settings),
               tooltip: "Showfile Settings",
-              onPressed: () {
-                setState(() {
-                  logInfo("Settings Button Pressed", LType.buttonPress);
-                }); // setState
-              } //onPressed
+              onPressed: _onSettingsButton,
+          ),
+          FutureBuilder<PackageInfo> (
+            future: _getPackageInfo(),
+            builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
+              if (snapshot.hasData) {
+                return IconButton(
+                    icon: const Icon(Icons.info),
+                    tooltip: "Info about Dungeon Sound",
+                    onPressed: () {
+                      _onInfoButton();
+                      setState(() {
+                        logInfo("showInfoDialog", LType.debug);
+                        showAboutDialog(context: context,
+                          applicationVersion: snapshot.data?.version,
+                          applicationName: "Dungeon Sound",
+                          children: [
+                            Text('Package name: ${snapshot.data?.appName}'),
+                            Text('Build number: ${snapshot.data?.buildNumber}'),
+                          ],//Children
+                        );// showAboutDialog
+                      }); // setState
+                    }
+                );
+              } else {
+                return const IconButton(
+                  icon: Icon(Icons.info),
+                  tooltip: "Info about Dungeon Sound",
+                  onPressed: null,
+                );
+              }
+            }
           ),
         ],
       ),

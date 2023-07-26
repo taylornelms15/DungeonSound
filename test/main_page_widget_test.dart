@@ -15,6 +15,32 @@ Future<void> _test_main_page_action_bar(WidgetTester tester) async {
   await tester.pumpWidget(const MyApp());
 
   expect(find.widgetWithText(AppBar, "Dungeon Sound"), findsOneWidget);
+
+  // Test new button
+  await tester.tap(find.byIcon(Icons.create));
+  await tester.pump();
+
+  // Test save button
+  await tester.tap(find.byIcon(Icons.save));
+  await tester.pump();
+
+  // Test save-as button
+  await tester.tap(find.byIcon(Icons.save_as));
+  await tester.pump();
+
+  // Test open button
+  await tester.tap(find.byIcon(Icons.file_open));
+  await tester.pump();
+
+  // Test settings button
+  await tester.tap(find.byIcon(Icons.settings));
+  await tester.pump();
+
+  // Test info button
+  await tester.tap(find.byIcon(Icons.info));
+  await tester.pump();
+  expect(find.text('1.0.0'), findsOneWidget);
+  //expect(find.byType(AboutDialog), findsOneWidget);
 }
 
 void main() {
