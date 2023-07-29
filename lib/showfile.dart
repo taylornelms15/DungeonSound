@@ -46,6 +46,7 @@ class ShowFile
   }
 
   // Static members
+  static const String extension = "showfile";
   static const String elementName = "ShowFile";
   static const String _bgPlaylistsElementName = "BackgroundPlaylists";
 

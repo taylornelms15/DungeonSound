@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import "ds_logging.dart";
 
-void main() {
+import "showfile.dart";
+
+
+void main() async{
   runApp(const MyApp());
 }
 
@@ -11,33 +17,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Dungeon Sound',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const DSHomePage(title: 'Dungeon Sound'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class DSHomePage extends StatefulWidget {
+  const DSHomePage({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -51,11 +42,13 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<DSHomePage> createState() => _DSHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _DSHomePageState extends State<DSHomePage> {
   int _counter = 0;
+  Future<String?>? saveFilePickerResult;
+  Future<FilePickerResult?>? openFilePickerResult;
 
   void _incrementCounter() {
     setState(() {
@@ -68,6 +61,82 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // Button Actions
+
+  void _executeOpenButton(BuildContext context) {
+    setState(() {
+      openFilePickerResult = FilePicker.platform.pickFiles(
+        dialogTitle: "Open ShowFile",
+        type: FileType.custom,
+        allowedExtensions: [ShowFile.extension],
+        allowMultiple: false,
+        lockParentWindow: true,
+      );
+      openFilePickerResult!.then(_executeOpenButtonFilePicked);
+    });
+  }
+
+  void _executeOpenButtonFilePicked(FilePickerResult? pickedFile) {
+    logDebug("Open file result: ${pickedFile}", LType.fileOperation);
+    if (pickedFile == null || pickedFile.count == 0) {
+      logInfo("No file picked to load", LType.debug);
+      return;
+    }
+    assert(pickedFile!.count == 1);
+    PlatformFile picked = pickedFile!.files[0];
+    logInfo("Path ${picked.path}, name ${picked.name}, extension ${picked.extension}", LType.fileOperation);
+
+    // TODO: open the file
+  }
+
+  void _executeSaveAsButton(BuildContext context) {
+    setState(() {
+      saveFilePickerResult = FilePicker.platform.saveFile(dialogTitle: "Save ShowFile",
+          type: FileType.custom,
+          allowedExtensions: [ShowFile.extension]);
+      saveFilePickerResult!.then(_executeSaveAsButtonFilePicked);
+    }); // setState
+  }
+
+  void _executeSaveAsButtonFilePicked(String? pickedFilePath) {
+    logInfo("Picked save path: $pickedFilePath", LType.fileOperation);
+    saveFilePickerResult = null;
+
+    // TODO: save the file
+  }
+
+  // Button Press Callbacks
+
+  void _onNewButton(BuildContext context) {
+    setState(() {
+      logInfo("New Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onSaveButton(BuildContext context) {
+    setState(() {
+      logInfo("Save Button Pressed", LType.buttonPress);
+    }); // setState
+  }
+
+  void _onSaveAsButton(BuildContext context) {
+    logInfo("Save As Button Pressed", LType.buttonPress);
+    _executeSaveAsButton(context);
+  }
+
+  void _onOpenButton(BuildContext context) {
+    logInfo("Open Button Pressed", LType.buttonPress);
+    _executeOpenButton(context);
+  }
+
+  void _onSettingsButton(BuildContext context) {
+    logInfo("Settings Button Pressed", LType.buttonPress);
+  }
+
+  void _onInfoButton() {
+    logInfo("Info Button Pressed", LType.buttonPress);
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -78,13 +147,78 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: <Widget>[
+          IconButton(
+              icon: const Icon(Icons.create),
+              tooltip: "New Showfile",
+              onPressed: () {
+                _onNewButton(context);
+              },
+          ),
+          IconButton(
+              icon: const Icon(Icons.save),
+              tooltip: "Save Showfile",
+              onPressed: () {
+                _onSaveButton(context);
+              },
+          ),
+          IconButton(
+              icon: const Icon(Icons.save_as),
+              tooltip: "Save Showfile as",
+              onPressed: () {
+                _onSaveAsButton(context);
+              },
+          ),
+          IconButton(
+              icon: const Icon(Icons.file_open),
+              tooltip: "Open Showfile",
+              onPressed: () {
+                _onOpenButton(context);
+              },
+          ),
+          IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: "Showfile Settings",
+              onPressed: () {
+                _onSettingsButton(context);
+              },
+          ),
+          FutureBuilder<PackageInfo> (
+              future: PackageInfo.fromPlatform(),
+              builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
+                if (snapshot.hasData) {
+                  return IconButton(
+                      icon: const Icon(Icons.info),
+                      tooltip: "Info about Dungeon Sound",
+                      onPressed: () {
+                        _onInfoButton();
+                        setState(() {
+                          logInfo("showInfoDialog", LType.debug);
+                          showAboutDialog(context: context,
+                            applicationVersion: snapshot.data?.version,
+                            applicationName: "Dungeon Sound",
+                            children: [
+                              Text('Package name: ${snapshot.data?.appName}'),
+                              Text('Build number: ${snapshot.data?.buildNumber}'),
+                            ],//Children
+                          );// showAboutDialog
+                        }); // setState
+                      }
+                  );
+                } else {
+                  return const IconButton(
+                    icon: Icon(Icons.info),
+                    tooltip: "Info about Dungeon Sound",
+                    onPressed: null,
+                  );
+                } // else
+              } // builder
+          ),
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
