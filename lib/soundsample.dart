@@ -58,7 +58,6 @@ class SoundSample
     if (other is! SoundSample) {
       return false;
     }
-    SoundSample cmp = other;
     return (name == other.name &&
             startTimestamp == other.startTimestamp &&
             endTimestamp == other.endTimestamp &&

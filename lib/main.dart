@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Dungeon Sound',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -57,33 +57,39 @@ class _DSHomePageState extends State<DSHomePage> {
     });
   }
 
+  // Button Actions
+
+  void _executeSaveAsButton(BuildContext context) {
+    setState(() {
+    }); // setState
+  }
+
   // Button Press Callbacks
 
-  void _onNewButton() {
+  void _onNewButton(BuildContext context) {
     setState(() {
       logInfo("New Button Pressed", LType.buttonPress);
     }); // setState
   }
 
-  void _onSaveButton() {
+  void _onSaveButton(BuildContext context) {
     setState(() {
       logInfo("Save Button Pressed", LType.buttonPress);
     }); // setState
   }
 
-  void _onSaveAsButton() {
-    setState(() {
-      logInfo("Save As Button Pressed", LType.buttonPress);
-    }); // setState
+  void _onSaveAsButton(BuildContext context) {
+    logInfo("Save As Button Pressed", LType.buttonPress);
+    _executeSaveAsButton(context);
   }
 
-  void _onOpenButton() {
+  void _onOpenButton(BuildContext context) {
     setState(() {
       logInfo("Open Button Pressed", LType.buttonPress);
     }); // setState
   }
 
-  void _onSettingsButton() {
+  void _onSettingsButton(BuildContext context) {
     setState(() {
       logInfo("Settings Button Pressed", LType.buttonPress);
     }); // setState
@@ -93,10 +99,6 @@ class _DSHomePageState extends State<DSHomePage> {
     setState(() {
       logInfo("Info Button Pressed", LType.buttonPress);
     }); // setState
-  }
-
-  Future<PackageInfo> _getPackageInfo() {
-    return PackageInfo.fromPlatform();
   }
 
   @override
@@ -117,58 +119,68 @@ class _DSHomePageState extends State<DSHomePage> {
           IconButton(
               icon: const Icon(Icons.create),
               tooltip: "New Showfile",
-              onPressed: _onNewButton,
+              onPressed: () {
+                _onNewButton(context);
+              },
           ),
           IconButton(
               icon: const Icon(Icons.save),
               tooltip: "Save Showfile",
-              onPressed: _onSaveButton,
+              onPressed: () {
+                _onSaveButton(context);
+              },
           ),
           IconButton(
               icon: const Icon(Icons.save_as),
               tooltip: "Save Showfile as",
-              onPressed: _onSaveAsButton,
+              onPressed: () {
+                _onSaveAsButton(context);
+              },
           ),
           IconButton(
               icon: const Icon(Icons.file_open),
               tooltip: "Open Showfile",
-              onPressed: _onOpenButton,
+              onPressed: () {
+                _onOpenButton(context);
+              },
           ),
           IconButton(
               icon: const Icon(Icons.settings),
               tooltip: "Showfile Settings",
-              onPressed: _onSettingsButton,
+              onPressed: () {
+                _onSettingsButton(context);
+              },
           ),
           FutureBuilder<PackageInfo> (
-            future: _getPackageInfo(),
-            builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
-              if (snapshot.hasData) {
-                return IconButton(
-                    icon: const Icon(Icons.info),
+              future: PackageInfo.fromPlatform(),
+              builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
+                if (snapshot.hasData) {
+                  return IconButton(
+                      icon: const Icon(Icons.info),
+                      tooltip: "Info about Dungeon Sound",
+                      onPressed: () {
+                        _onInfoButton();
+                        setState(() {
+                          logInfo("showInfoDialog", LType.debug);
+                          showAboutDialog(context: context,
+                            applicationVersion: snapshot.data?.version,
+                            applicationName: "Dungeon Sound",
+                            children: [
+                              Text('Package name: ${snapshot.data?.appName}'),
+                              Text('Build number: ${snapshot.data?.buildNumber}'),
+                            ],//Children
+                          );// showAboutDialog
+                        }); // setState
+                      }
+                  );
+                } else {
+                  return const IconButton(
+                    icon: Icon(Icons.info),
                     tooltip: "Info about Dungeon Sound",
-                    onPressed: () {
-                      _onInfoButton();
-                      setState(() {
-                        logInfo("showInfoDialog", LType.debug);
-                        showAboutDialog(context: context,
-                          applicationVersion: snapshot.data?.version,
-                          applicationName: "Dungeon Sound",
-                          children: [
-                            Text('Package name: ${snapshot.data?.appName}'),
-                            Text('Build number: ${snapshot.data?.buildNumber}'),
-                          ],//Children
-                        );// showAboutDialog
-                      }); // setState
-                    }
-                );
-              } else {
-                return const IconButton(
-                  icon: Icon(Icons.info),
-                  tooltip: "Info about Dungeon Sound",
-                  onPressed: null,
-                );
-              }
-            }
+                    onPressed: null,
+                  );
+                } // else
+              } // builder
           ),
         ],
       ),
