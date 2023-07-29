@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import "ds_logging.dart";
+
+import "showfile.dart";
 
 
 void main() async{
@@ -44,7 +47,8 @@ class DSHomePage extends StatefulWidget {
 
 class _DSHomePageState extends State<DSHomePage> {
   int _counter = 0;
-  PackageInfo? packageInfo = null;
+  Future<String?>? saveFilePickerResult;
+  Future<FilePickerResult?>? openFilePickerResult;
 
   void _incrementCounter() {
     setState(() {
@@ -59,9 +63,46 @@ class _DSHomePageState extends State<DSHomePage> {
 
   // Button Actions
 
+  void _executeOpenButton(BuildContext context) {
+    setState(() {
+      openFilePickerResult = FilePicker.platform.pickFiles(
+        dialogTitle: "Open ShowFile",
+        type: FileType.custom,
+        allowedExtensions: [ShowFile.extension],
+        allowMultiple: false,
+        lockParentWindow: true,
+      );
+      openFilePickerResult!.then(_executeOpenButtonFilePicked);
+    });
+  }
+
+  void _executeOpenButtonFilePicked(FilePickerResult? pickedFile) {
+    logDebug("Open file result: ${pickedFile}", LType.fileOperation);
+    if (pickedFile == null || pickedFile.count == 0) {
+      logInfo("No file picked to load", LType.debug);
+      return;
+    }
+    assert(pickedFile!.count == 1);
+    PlatformFile picked = pickedFile!.files[0];
+    logInfo("Path ${picked.path}, name ${picked.name}, extension ${picked.extension}", LType.fileOperation);
+
+    // TODO: open the file
+  }
+
   void _executeSaveAsButton(BuildContext context) {
     setState(() {
+      saveFilePickerResult = FilePicker.platform.saveFile(dialogTitle: "Save ShowFile",
+          type: FileType.custom,
+          allowedExtensions: [ShowFile.extension]);
+      saveFilePickerResult!.then(_executeSaveAsButtonFilePicked);
     }); // setState
+  }
+
+  void _executeSaveAsButtonFilePicked(String? pickedFilePath) {
+    logInfo("Picked save path: $pickedFilePath", LType.fileOperation);
+    saveFilePickerResult = null;
+
+    // TODO: save the file
   }
 
   // Button Press Callbacks
@@ -84,21 +125,16 @@ class _DSHomePageState extends State<DSHomePage> {
   }
 
   void _onOpenButton(BuildContext context) {
-    setState(() {
-      logInfo("Open Button Pressed", LType.buttonPress);
-    }); // setState
+    logInfo("Open Button Pressed", LType.buttonPress);
+    _executeOpenButton(context);
   }
 
   void _onSettingsButton(BuildContext context) {
-    setState(() {
-      logInfo("Settings Button Pressed", LType.buttonPress);
-    }); // setState
+    logInfo("Settings Button Pressed", LType.buttonPress);
   }
 
   void _onInfoButton() {
-    setState(() {
-      logInfo("Info Button Pressed", LType.buttonPress);
-    }); // setState
+    logInfo("Info Button Pressed", LType.buttonPress);
   }
 
   @override

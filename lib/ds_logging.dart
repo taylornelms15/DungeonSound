@@ -4,6 +4,7 @@ import "package:logging/logging.dart";
 enum LType {
   debug,
   buttonPress,
+  fileOperation,
 }
 
 void logDebug(String message, LType type)
