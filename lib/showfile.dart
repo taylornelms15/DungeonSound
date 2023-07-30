@@ -20,7 +20,7 @@ class ShowFile
 {
   // Constructors
   ShowFile()
-    : name = ""
+    : name = newNameDefault
   ;
 
   ShowFile.fromXmlElement(xml.XmlElement element)
@@ -51,6 +51,7 @@ class ShowFile
   // Static members
   static const String extension = "showfile";
   static const String elementName = "ShowFile";
+  static const String newNameDefault = "New Showfile";
   static const String _bgPlaylistsElementName = "BackgroundPlaylists";
 
   // Public members
@@ -61,9 +62,41 @@ class ShowFile
 
   // Saving/Loading Functions
 
+  /// Loads the given file into this object, clears other contents
+  /// Note the duplication with the constructors; be wary when changing
   int loadShowFile(PlatformFile file)
   {
     logDebug("<ShowFile> Loading file from ${file.path}", LType.fileOperation);
+
+    filePath = file.path!;
+
+    xml.XmlDocument xmlDoc = xml.XmlDocument.parse(File(filePath!).readAsStringSync());
+    xml.XmlElement element = xmlDoc.firstElementChild!;
+
+    assert(element.name.toString() == ShowFile.elementName);
+    name = element.getAttribute("title")!;
+
+    backgroundPlaylists = <Playlist>[];
+    for(final childElement in element.childElements) {
+      if (childElement.name.toString() == ShowFile._bgPlaylistsElementName) {
+        _loadBackgroundPlaylists(childElement);
+      }
+    }
+    logDebug("Loaded ${backgroundPlaylists.length} playlists from file at $filePath", LType.debug);
+
+    return 0;
+  }
+
+  /// Clears contents of Showfile, sets up blank showfile with optional filepath
+  int newShowFile(String? path)
+  {
+    logDebug("<ShowFile> Clearing contents, setting to a new ShowFile", LType.fileOperation);
+
+    //TODO: new show file
+
+    filePath = path;
+    name = newNameDefault;
+    backgroundPlaylists = <Playlist>[];
 
     return 0;
   }

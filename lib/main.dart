@@ -57,17 +57,21 @@ class _DSAppBarState extends ConsumerState<DSAppBar> {
 
   // Button Actions
 
+  void _executeNewButton(BuildContext context) {
+    // TODO: check if we want to save, perhaps?
+    // Currently, default to no path for new file
+    ref.read(showfileProvider.notifier).newShowFile(null);
+  }
+
   void _executeOpenButton(BuildContext context) {
-    setState(() {
-      openFilePickerResult = FilePicker.platform.pickFiles(
-        dialogTitle: "Open ShowFile",
-        type: FileType.custom,
-        allowedExtensions: [ShowFile.extension],
-        allowMultiple: false,
-        lockParentWindow: true,
-      );
-      openFilePickerResult!.then(_executeOpenButtonFilePicked);
-    });
+    openFilePickerResult = FilePicker.platform.pickFiles(
+      dialogTitle: "Open ShowFile",
+      type: FileType.custom,
+      allowedExtensions: [ShowFile.extension],
+      allowMultiple: false,
+      lockParentWindow: true,
+    );
+    openFilePickerResult!.then(_executeOpenButtonFilePicked);
   }
 
   void _executeOpenButtonFilePicked(FilePickerResult? pickedFile) {
@@ -80,16 +84,15 @@ class _DSAppBarState extends ConsumerState<DSAppBar> {
     PlatformFile picked = pickedFile.files[0];
     logInfo("Path ${picked.path}, name ${picked.name}, extension ${picked.extension}", LType.fileOperation);
 
-    ref.read(showfileProvider).loadShowFile(picked);
+    // Using notifier so that we might trigger other UI updates after Open
+    ref.read(showfileProvider.notifier).loadShowFile(picked);
   }
 
   void _executeSaveAsButton(BuildContext context) {
-    setState(() {
-      saveFilePickerResult = FilePicker.platform.saveFile(dialogTitle: "Save ShowFile",
-          type: FileType.custom,
-          allowedExtensions: [ShowFile.extension]);
-      saveFilePickerResult!.then(_executeSaveAsButtonFilePicked);
-    }); // setState
+    saveFilePickerResult = FilePicker.platform.saveFile(dialogTitle: "Save ShowFile",
+        type: FileType.custom,
+        allowedExtensions: [ShowFile.extension]);
+    saveFilePickerResult!.then(_executeSaveAsButtonFilePicked);
   }
 
   void _executeSaveAsButtonFilePicked(String? pickedFilePath) {
@@ -100,6 +103,7 @@ class _DSAppBarState extends ConsumerState<DSAppBar> {
       return;
     }
 
+    // Using raw access to state because should not affect UI
     ref.read(showfileProvider).saveShowFile(pickedFilePath);
   }
 
@@ -107,6 +111,7 @@ class _DSAppBarState extends ConsumerState<DSAppBar> {
 
   void _onNewButton(BuildContext context) {
     logInfo("New Button Pressed", LType.buttonPress);
+    _executeNewButton(context);
   }
 
   void _onSaveButton(BuildContext context) {
