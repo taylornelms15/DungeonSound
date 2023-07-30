@@ -1,21 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import "ds_logging.dart";
 
 import "showfile.dart";
+import "showfilenotifier.dart";
 
+final showfileProvider = StateNotifierProvider<ShowFileNotifier, ShowFile>(
+    (ref) {
+      return ShowFileNotifier();
+    }
+);
 
 void main() async{
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope (
+      child: MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Dungeon Sound',
       theme: ThemeData(
@@ -27,39 +38,22 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class DSHomePage extends StatefulWidget {
-  const DSHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+class DSAppBar extends ConsumerStatefulWidget  implements PreferredSizeWidget{
+  const DSAppBar({super.key, required this.title}) :
+    preferredSize = const Size.fromHeight(kToolbarHeight);
 
   final String title;
 
   @override
-  State<DSHomePage> createState() => _DSHomePageState();
+  final Size preferredSize;
+
+  @override
+  ConsumerState<DSAppBar> createState() => _DSAppBarState();
 }
 
-class _DSHomePageState extends State<DSHomePage> {
-  int _counter = 0;
+class _DSAppBarState extends ConsumerState<DSAppBar> {
   Future<String?>? saveFilePickerResult;
   Future<FilePickerResult?>? openFilePickerResult;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
 
   // Button Actions
 
@@ -82,11 +76,11 @@ class _DSHomePageState extends State<DSHomePage> {
       logInfo("No file picked to load", LType.debug);
       return;
     }
-    assert(pickedFile!.count == 1);
-    PlatformFile picked = pickedFile!.files[0];
+    assert(pickedFile.count == 1);
+    PlatformFile picked = pickedFile.files[0];
     logInfo("Path ${picked.path}, name ${picked.name}, extension ${picked.extension}", LType.fileOperation);
 
-    // TODO: open the file
+    ref.read(showfileProvider).loadShowFile(picked);
   }
 
   void _executeSaveAsButton(BuildContext context) {
@@ -101,22 +95,28 @@ class _DSHomePageState extends State<DSHomePage> {
   void _executeSaveAsButtonFilePicked(String? pickedFilePath) {
     logInfo("Picked save path: $pickedFilePath", LType.fileOperation);
     saveFilePickerResult = null;
+    if (pickedFilePath == null) {
+      logInfo("No file path picked to save", LType.debug);
+      return;
+    }
 
-    // TODO: save the file
+    ref.read(showfileProvider).saveShowFile(pickedFilePath);
   }
 
   // Button Press Callbacks
 
   void _onNewButton(BuildContext context) {
-    setState(() {
-      logInfo("New Button Pressed", LType.buttonPress);
-    }); // setState
+    logInfo("New Button Pressed", LType.buttonPress);
   }
 
   void _onSaveButton(BuildContext context) {
-    setState(() {
-      logInfo("Save Button Pressed", LType.buttonPress);
-    }); // setState
+    logInfo("Save Button Pressed", LType.buttonPress);
+    if (ref.read(showfileProvider).filePath != null) {
+      ref.read(showfileProvider).saveShowFile();
+    } else {
+      logDebug("No file path associated with ShowFile, opening picker dialog", LType.fileOperation);
+      _executeSaveAsButton(context);
+    }
   }
 
   void _onSaveAsButton(BuildContext context) {
@@ -139,6 +139,121 @@ class _DSHomePageState extends State<DSHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    AppBar retval = AppBar(
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      // Here we take the value from the MyHomePage object that was created by
+      // the App.build method, and use it to set our appbar title.
+      title: Text(widget.title),
+      actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.create),
+          tooltip: "New Showfile",
+          onPressed: () {
+            _onNewButton(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.save),
+          tooltip: "Save Showfile",
+          onPressed: () {
+            _onSaveButton(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.save_as),
+          tooltip: "Save Showfile as",
+          onPressed: () {
+            _onSaveAsButton(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.file_open),
+          tooltip: "Open Showfile",
+          onPressed: () {
+            _onOpenButton(context);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          tooltip: "Showfile Settings",
+          onPressed: () {
+            _onSettingsButton(context);
+          },
+        ),
+        FutureBuilder<PackageInfo> (
+            future: PackageInfo.fromPlatform(),
+            builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
+              if (snapshot.hasData) {
+                return IconButton(
+                    icon: const Icon(Icons.info),
+                    tooltip: "Info about Dungeon Sound",
+                    onPressed: () {
+                      _onInfoButton();
+                      setState(() {
+                        logInfo("showInfoDialog", LType.debug);
+                        showAboutDialog(context: context,
+                          applicationVersion: snapshot.data?.version,
+                          applicationName: "Dungeon Sound",
+                          children: [
+                            Text('Package name: ${snapshot.data?.appName}'),
+                            Text('Build number: ${snapshot.data?.buildNumber}'),
+                          ],//Children
+                        );// showAboutDialog
+                      }); // setState
+                    }
+                );
+              } else {
+                return const IconButton(
+                  icon: Icon(Icons.info),
+                  tooltip: "Info about Dungeon Sound",
+                  onPressed: null,
+                );
+              } // else
+            } // builder
+        ),
+      ],
+    );
+    return retval;
+  } // build
+}
+
+class DSHomePage extends ConsumerStatefulWidget {
+  const DSHomePage({super.key, required this.title});
+
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
+
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
+
+  @override
+  ConsumerState<DSHomePage> createState() => _DSHomePageState();
+
+}
+
+class _DSHomePageState extends ConsumerState<DSHomePage> {
+  int _counter = 0;
+  Future<String?>? saveFilePickerResult;
+  Future<FilePickerResult?>? openFilePickerResult;
+
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -146,80 +261,7 @@ class _DSHomePageState extends State<DSHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-              icon: const Icon(Icons.create),
-              tooltip: "New Showfile",
-              onPressed: () {
-                _onNewButton(context);
-              },
-          ),
-          IconButton(
-              icon: const Icon(Icons.save),
-              tooltip: "Save Showfile",
-              onPressed: () {
-                _onSaveButton(context);
-              },
-          ),
-          IconButton(
-              icon: const Icon(Icons.save_as),
-              tooltip: "Save Showfile as",
-              onPressed: () {
-                _onSaveAsButton(context);
-              },
-          ),
-          IconButton(
-              icon: const Icon(Icons.file_open),
-              tooltip: "Open Showfile",
-              onPressed: () {
-                _onOpenButton(context);
-              },
-          ),
-          IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: "Showfile Settings",
-              onPressed: () {
-                _onSettingsButton(context);
-              },
-          ),
-          FutureBuilder<PackageInfo> (
-              future: PackageInfo.fromPlatform(),
-              builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
-                if (snapshot.hasData) {
-                  return IconButton(
-                      icon: const Icon(Icons.info),
-                      tooltip: "Info about Dungeon Sound",
-                      onPressed: () {
-                        _onInfoButton();
-                        setState(() {
-                          logInfo("showInfoDialog", LType.debug);
-                          showAboutDialog(context: context,
-                            applicationVersion: snapshot.data?.version,
-                            applicationName: "Dungeon Sound",
-                            children: [
-                              Text('Package name: ${snapshot.data?.appName}'),
-                              Text('Build number: ${snapshot.data?.buildNumber}'),
-                            ],//Children
-                          );// showAboutDialog
-                        }); // setState
-                      }
-                  );
-                } else {
-                  return const IconButton(
-                    icon: Icon(Icons.info),
-                    tooltip: "Info about Dungeon Sound",
-                    onPressed: null,
-                  );
-                } // else
-              } // builder
-          ),
-        ],
-      ),
+      appBar: DSAppBar(title: widget.title),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.

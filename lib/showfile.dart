@@ -1,6 +1,9 @@
 import 'package:xml/xml.dart' as xml;
 import 'dart:io';
+import "package:file_picker/src/platform_file.dart";
+
 import "playlist.dart";
+import "ds_logging.dart";
 
 typedef PlaylistList = List<Playlist>;
 
@@ -58,11 +61,20 @@ class ShowFile
 
   // Saving/Loading Functions
 
+  int loadShowFile(PlatformFile file)
+  {
+    logDebug("<ShowFile> Loading file from ${file.path}", LType.fileOperation);
+
+    return 0;
+  }
+
   int saveShowFile([String? path])
   {
     if (path != null) {
       filePath = path;
     }
+
+    logDebug("Executing file save to $filePath", LType.fileOperation);
 
     assert(filePath != null);
     // Construct top-level xml element
